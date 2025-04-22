@@ -5,7 +5,7 @@ from matplotlib import font_manager as fm, rcParams
 import os
 import requests
 
-# Register Sarabun font
+# Function to download and register Sarabun font
 def register_sarabun_font(save_dir="fonts"):
     font_name = "Sarabun"
     os.makedirs(save_dir, exist_ok=True)
@@ -25,24 +25,28 @@ def register_sarabun_font(save_dir="fonts"):
 
     prop = fm.FontProperties(fname=font_path)
     rcParams["font.family"] = prop.get_name()
-    return font_path
+    return prop.get_name()
 
-sarabun_path = register_sarabun_font()
+# Register Sarabun font for charts
+sarabun_font = register_sarabun_font()
 
 def show_chart2():
-    st.subheader("📊 Pie Chart of สถานะของเอกสาร")
+    st.title("📊 Pie Chart of สถานะของเอกสาร")
 
+    # Check if data was uploaded
     if "uploaded_data" not in st.session_state:
         st.warning("⚠️ Please upload a file on the Home page first.")
         return
 
     df = st.session_state["uploaded_data"]
 
+    # Make sure the required column exists
     status_column = "สถานะของเอกสาร"
     if status_column not in df.columns:
         st.error(f"❌ Column '{status_column}' not found in the uploaded data.")
         return
 
+    # Let the user pick statuses to display
     unique_statuses = df[status_column].astype(str).unique()
     selected_statuses = st.multiselect(
         "เลือกสถานะที่จะแสดงในกราฟ (Select statuses to include)",
@@ -54,29 +58,28 @@ def show_chart2():
         st.info("ℹ️ กรุณาเลือกสถานะเพื่อแสดงกราฟ (Please select at least one status).")
         return
 
+    # Filter and count
     filtered_df = df[df[status_column].isin(selected_statuses)]
     status_counts = filtered_df[status_column].value_counts()
 
-    fig, ax = plt.subplots(figsize=(6, 6))
+    # Plot pie chart
+    fig, ax = plt.subplots()
     wedges, texts, autotexts = ax.pie(
         status_counts,
         labels=status_counts.index,
         autopct="%1.1f%%",
         startangle=140,
-        colors=plt.cm.Paired.colors[:len(status_counts)],
-        wedgeprops=dict(width=0.4, edgecolor='w')
+        colors=plt.cm.tab20.colors[:len(status_counts)]
     )
-    ax.axis("equal")
 
-    if sarabun_path:
-        prop = fm.FontProperties(fname=sarabun_path)
-        for text in texts + autotexts:
+    # Set font if available
+    if sarabun_font:
+        font_path = os.path.join("fonts", "Sarabun.ttf")
+        prop = fm.FontProperties(fname=font_path)
+        for text in autotexts:
             text.set_fontproperties(prop)
-
-        # Custom labels with record count
         for text, count in zip(texts, status_counts):
             text.set_text(f"{text.get_text()} ({count} รายการ)")
+            text.set_fontproperties(prop)
 
     st.pyplot(fig)
-
-    st.markdown(f"📦 **รวมทั้งหมด:** {status_counts.sum()} รายการ")

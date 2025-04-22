@@ -3,29 +3,44 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib import font_manager as fm
 import matplotlib
+import requests
+from io import BytesIO
+
+def load_font_from_github(url):
+    try:
+        response = requests.get(url)
+        if response.status_code == 200:
+            font_data = response.content
+            font_properties = fm.FontProperties(fname=BytesIO(font_data))
+            matplotlib.rcParams['font.family'] = font_properties.get_name()
+        else:
+            st.error("❌ Failed to load font from GitHub")
+    except Exception as e:
+        st.error(f"❌ Error loading font: {e}")
+
+# Try to load font from GitHub (or any other online location you prefer)
+font_url = "https://raw.githubusercontent.com/your-username/your-repo/main/fonts/Sarabun.ttf"
+load_font_from_github(font_url)
 
 def show_chart1():
     st.title("📦 รายงานจำนวนอุปกรณ์ที่เข้าสู่ขั้นตอนรอหน่วยงานกลางดำเนินการ")
-
-    # กำหนดฟอนต์ภาษาไทย
-    thai_font_path = "C:/Windows/Fonts/tahoma.ttf"  # ปรับ path ตามเครื่องคุณ
-    thai_font = fm.FontProperties(fname=thai_font_path)
-    matplotlib.rcParams['font.family'] = thai_font.get_name()
 
     # Check if data exists in session_state
     if 'uploaded_data' in st.session_state:
         df = st.session_state['uploaded_data']
 
-        if 'วันที่ Desktop Support ปิดงาน' in df.columns and 'สถานะของเอกสาร' in df.columns:
+        # Check if the necessary columns exist
+        required_columns = ['วันที่ Desktop Support ปิดงาน', 'สถานะของเอกสาร']
+        if all(col in df.columns for col in required_columns):
             # Filter the data where 'สถานะของเอกสาร' is 'รอหน่วยงานกลางดูแลทรัพย์สินดำเนินการ'
             df_filtered = df[df['สถานะของเอกสาร'] == 'รอหน่วยงานกลางดูแลทรัพย์สินดำเนินการ']
 
-            # Check if there is data after filtering
             if not df_filtered.empty:
+                # Ensure the 'วันที่ Desktop Support ปิดงาน' is a valid datetime
                 df_filtered['วันที่ Desktop Support ปิดงาน'] = pd.to_datetime(df_filtered['วันที่ Desktop Support ปิดงาน'], errors='coerce')
                 df_filtered = df_filtered.dropna(subset=['วันที่ Desktop Support ปิดงาน'])
 
-                # Extract month and year for grouping
+                # Extract year and month for grouping
                 df_filtered['Year-Month'] = df_filtered['วันที่ Desktop Support ปิดงาน'].dt.to_period('M')
 
                 # Create a list of unique months for selection
@@ -50,7 +65,7 @@ def show_chart1():
                     'จำนวนอุปกรณ์': summary.values
                 })
 
-                # Bar chart for the selected month
+                # Generate bar chart for the selected month
                 if not summary_df.empty:
                     fig, ax = plt.subplots(figsize=(10, 5))
                     bars = ax.bar(summary_df['วันที่ปิดงานโดย Desktop Support'].astype(str), summary_df['จำนวนอุปกรณ์'], color='skyblue')

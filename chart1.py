@@ -82,9 +82,9 @@ def show_chart1():
                 if not summary_df.empty:
                     fig, ax = plt.subplots(figsize=(10, 5))
                     bars = ax.bar(summary_df['วันที่ปิดงานโดย Desktop Support'].astype(str), summary_df['จำนวนอุปกรณ์'], color='skyblue')
-                    ax.set_title(f'จำนวนอุปกรณ์ที่เข้าสู่ขั้นตอนรอหน่วยงานกลางฯ - {selected_month}', fontsize=14)
-                    ax.set_xlabel('วันที่ Desktop Support ปิดงาน')
-                    ax.set_ylabel('จำนวนอุปกรณ์')
+                    ax.set_title(f'Number of devices in the waiting process for central agency action - {selected_month}', fontsize=14)
+                    ax.set_xlabel('Date when Desktop Support closed the task')
+                    ax.set_ylabel('Number of Devices')
                     plt.xticks(rotation=45)
                     plt.grid(axis='y', linestyle='--', alpha=0.7)
 

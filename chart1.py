@@ -1,46 +1,59 @@
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
-from matplotlib import font_manager as fm
-import matplotlib
+from matplotlib import font_manager as fm, rcParams
+import os
 import requests
-from io import BytesIO
 
-def load_font_from_github(url):
-    try:
-        response = requests.get(url)
+# Function to download and register Sarabun font
+def register_sarabun_font(save_dir="fonts"):
+    font_name = "Sarabun"
+    os.makedirs(save_dir, exist_ok=True)
+    font_path = os.path.join(save_dir, f"{font_name}.ttf")
+
+    if not os.path.exists(font_path):
+        # Google Fonts URL for Sarabun font
+        css_url = f"https://fonts.googleapis.com/css2?family={font_name.replace(' ', '+')}&display=swap"
+        response = requests.get(css_url)
         if response.status_code == 200:
-            font_data = response.content
-            font_properties = fm.FontProperties(fname=BytesIO(font_data))
-            matplotlib.rcParams['font.family'] = font_properties.get_name()
+            ttf_url = response.text.split("url(")[1].split(")")[0].replace('"', '')
+            font_data = requests.get(ttf_url).content
+            with open(font_path, "wb") as f:
+                f.write(font_data)
         else:
-            st.error("❌ Failed to load font from GitHub")
-    except Exception as e:
-        st.error(f"❌ Error loading font: {e}")
+            st.warning("Could not download Sarabun font.")
+            return None
 
-# Try to load font from GitHub (or any other online location you prefer)
-font_url = "https://raw.githubusercontent.com/your-username/your-repo/main/fonts/Sarabun.ttf"
-load_font_from_github(font_url)
+    prop = fm.FontProperties(fname=font_path)
+    rcParams["font.family"] = prop.get_name()
+    return prop.get_name()
+
+# Register Sarabun font for charts
+sarabun_font = register_sarabun_font()
 
 def show_chart1():
     st.title("📦 รายงานจำนวนอุปกรณ์ที่เข้าสู่ขั้นตอนรอหน่วยงานกลางดำเนินการ")
+
+    # Use the registered Sarabun font for Thai text
+    if sarabun_font:
+        font_path = os.path.join("fonts", "Sarabun.ttf")
+        prop = fm.FontProperties(fname=font_path)
+        rcParams["font.family"] = prop.get_name()
 
     # Check if data exists in session_state
     if 'uploaded_data' in st.session_state:
         df = st.session_state['uploaded_data']
 
-        # Check if the necessary columns exist
-        required_columns = ['วันที่ Desktop Support ปิดงาน', 'สถานะของเอกสาร']
-        if all(col in df.columns for col in required_columns):
+        if 'วันที่ Desktop Support ปิดงาน' in df.columns and 'สถานะของเอกสาร' in df.columns:
             # Filter the data where 'สถานะของเอกสาร' is 'รอหน่วยงานกลางดูแลทรัพย์สินดำเนินการ'
             df_filtered = df[df['สถานะของเอกสาร'] == 'รอหน่วยงานกลางดูแลทรัพย์สินดำเนินการ']
 
+            # Check if there is data after filtering
             if not df_filtered.empty:
-                # Ensure the 'วันที่ Desktop Support ปิดงาน' is a valid datetime
                 df_filtered['วันที่ Desktop Support ปิดงาน'] = pd.to_datetime(df_filtered['วันที่ Desktop Support ปิดงาน'], errors='coerce')
                 df_filtered = df_filtered.dropna(subset=['วันที่ Desktop Support ปิดงาน'])
 
-                # Extract year and month for grouping
+                # Extract month and year for grouping
                 df_filtered['Year-Month'] = df_filtered['วันที่ Desktop Support ปิดงาน'].dt.to_period('M')
 
                 # Create a list of unique months for selection
@@ -65,7 +78,7 @@ def show_chart1():
                     'จำนวนอุปกรณ์': summary.values
                 })
 
-                # Generate bar chart for the selected month
+                # Bar chart for the selected month
                 if not summary_df.empty:
                     fig, ax = plt.subplots(figsize=(10, 5))
                     bars = ax.bar(summary_df['วันที่ปิดงานโดย Desktop Support'].astype(str), summary_df['จำนวนอุปกรณ์'], color='skyblue')
@@ -79,6 +92,12 @@ def show_chart1():
                     for bar in bars:
                         yval = bar.get_height()
                         ax.text(bar.get_x() + bar.get_width() / 2, yval + 0.1, int(yval), ha='center', va='bottom', fontsize=10)
+
+                    # Apply the font to the labels and ticks
+                    for label in ax.get_xticklabels():
+                        label.set_fontproperties(prop)
+                    for label in ax.get_yticklabels():
+                        label.set_fontproperties(prop)
 
                     st.pyplot(fig)
 

@@ -6,7 +6,7 @@ def show_chart3():
     st.subheader("📊 Comparison: Correct Data vs Duplicate & Wrong Data")
 
     if 'uploaded_data' not in st.session_state:
-        st.warning("Please upload a file from the Home page first.")
+        st.warning("⚠️ กรุณาอัปโหลดไฟล์ในหน้า Home ก่อน")
         return
 
     # Read from uploaded Excel file

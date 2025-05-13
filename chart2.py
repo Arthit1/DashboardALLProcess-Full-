@@ -35,7 +35,7 @@ def show_chart2():
 
     # Check if data was uploaded
     if "uploaded_data" not in st.session_state:
-        st.warning("⚠️ Please upload a file on the Home page first.")
+        st.warning("⚠️ กรุณาอัปโหลดไฟล์ในหน้า Home ก่อน")
         return
 
     df = st.session_state["uploaded_data"]

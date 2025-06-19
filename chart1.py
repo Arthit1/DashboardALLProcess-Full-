@@ -22,7 +22,8 @@ def register_sarabun_font(save_dir="fonts"):
                 f.write(font_data)
 
     prop = fm.FontProperties(fname=font_path)
-    rcParams["font.family"] = prop.get_name()
+    plt.rcParams["font.family"] = prop.get_name()
+    plt.rcParams["axes.unicode_minus"] = False
     return prop.get_name()
 
 # Function to clean and strip surrogate characters
@@ -75,7 +76,8 @@ def show_chart1():
                     ax.set_title(f'Number of devices in the waiting process for central agency action - {selected_month}', fontsize=14)
                     ax.set_xlabel('Date when Desktop Support closed the task')
                     ax.set_ylabel('Number of Devices')
-                                                # plt.grid removed for pie chart compatibility
+                    plt.xticks(rotation=45, ha='right')
+                    plt.grid(axis='y', linestyle='--', alpha=0.7)
 
                     for bar in bars:
                         yval = bar.get_height()
@@ -88,7 +90,7 @@ def show_chart1():
 
                     st.pyplot(fig)
                     st.subheader(f"ข้อมูลจำนวนอุปกรณ์ที่ปิดงานสำหรับเดือน {selected_month}")
-                    
+
                 else:
                     st.warning(f"⚠️ ไม่มีข้อมูลสำหรับเดือน {selected_month}")
 
@@ -123,7 +125,6 @@ def show_chart1():
                     )
 
                     ax2.set_title('สัดส่วนอุปกรณ์แต่ละประเภท (Pie Chart)', fontproperties=prop)
-                                                                    # removed xticks rotation for pie chart
                     plt.tight_layout()
 
                     if sarabun_font:

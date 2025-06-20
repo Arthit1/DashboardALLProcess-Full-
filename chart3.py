@@ -1,21 +1,19 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+from io import BytesIO
 
 def show_chart3():
     st.subheader("📧 รายงานสัดส่วนอีเมลบริษัทจากผู้สร้างเอกสาร")
 
-    if 'uploaded_file' not in st.session_state:
-        st.warning("⚠️ กรุณาอัปโหลดไฟล์ในหน้า Home ก่อน")
-        return
-
-    uploaded_file = st.session_state.get("uploaded_file")
-    if uploaded_file is None:
-        st.error("No file found in session. Please re-upload.")
+    if 'file_bytes' not in st.session_state or 'data_source' not in st.session_state:
+        st.warning("⚠️ กรุณาอัปโหลดไฟล์และเลือกชุดข้อมูลในหน้า Home ก่อน")
         return
 
     try:
-        email_df = pd.read_excel(uploaded_file, sheet_name='Company Email')
+        uploaded_file = BytesIO(st.session_state['file_bytes'])
+        sheet_name = 'Company Email' if st.session_state['data_source'] == 'ALL Data' else 'Tara-Silom Email Summary'
+        email_df = pd.read_excel(uploaded_file, sheet_name=sheet_name)
 
         fig = px.pie(email_df, names='Domain', values='Count')
         st.plotly_chart(fig)

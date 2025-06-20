@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+from io import BytesIO
 
 def home():
     st.title("📂 Upload Your File")
@@ -7,18 +8,30 @@ def home():
     uploaded_file = st.file_uploader("Choose a file (Excel or CSV)", type=["xlsx", "xls", "csv"])
 
     if uploaded_file is not None:
+        file_bytes = uploaded_file.read()
+        st.session_state['file_bytes'] = file_bytes
+        st.session_state['uploaded_file'] = uploaded_file
+
+    # Reuse last uploaded file if available
+    if 'file_bytes' in st.session_state:
+        st.markdown("### 🔀 เลือกชุดข้อมูลที่ต้องการแสดงผล")
+        selected_source = st.selectbox(
+            "เลือกชุดข้อมูล",
+            ["ALL Data", "Tara-Silom Data"]
+        )
+        st.session_state['data_source'] = selected_source
+
         try:
-            if uploaded_file.name.endswith(".csv"):
-                df = pd.read_csv(uploaded_file)
+            file_like = BytesIO(st.session_state['file_bytes'])
+            if uploaded_file and uploaded_file.name.endswith(".csv"):
+                df = pd.read_csv(file_like)
             else:
-                df = pd.read_excel(uploaded_file)
+                sheet_name = 'Correct Data' if selected_source == 'ALL Data' else 'Tara-Silom'
+                df = pd.read_excel(file_like, sheet_name=sheet_name)
 
-            st.success("✅ File uploaded successfully!")
-            st.dataframe(df.head())  # Show first few rows
-
-            # ✅ Store both the dataframe and the original file for later use
             st.session_state['uploaded_data'] = df
-            st.session_state['uploaded_file'] = uploaded_file  # <-- this line is key!
+            st.success("✅ File loaded from session memory!")
+            st.dataframe(df.head())
 
         except Exception as e:
-            st.error(f"❌ Error reading file: {e}")
+            st.error(f"❌ Error reading file from memory: {e}")

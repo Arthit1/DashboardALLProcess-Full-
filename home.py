@@ -17,7 +17,8 @@ def home():
         st.markdown("### 🔀 เลือกชุดข้อมูลที่ต้องการแสดงผล")
         selected_source = st.selectbox(
             "เลือกชุดข้อมูล",
-            ["ALL Data", "Tara-Silom Data"]
+            ["ALL Data", "Tara-Silom Data"],
+            index=["ALL Data", "Tara-Silom Data"].index(st.session_state.get('data_source', "ALL Data"))
         )
         st.session_state['data_source'] = selected_source
 

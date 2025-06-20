@@ -5,7 +5,7 @@ from chart2 import show_chart2
 from chart3 import show_chart3
 
 # Sidebar for navigation
-st.sidebar.title("📊 Navigation")
+st.sidebar.title("📊 Dashboard ข้อมูลทรัพย์สิน V2")
 page = st.sidebar.radio("Go to", ("Home", "Chart 1", "Chart 2","Chart 3"))
 
 # Page router
